@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Seagull</title>
+</head>
+
+<body>
+
+  <h2>To Invest</h2>
+  <p>{{ '%0.2f' | format(seagull.config.base_currency_to_invest) }} {{ seagull.config.base_currency | upper }}</p>
+
+  <h2>My Index</h2>
+  <table>
+    <tr>
+      <th>Name</th>
+      <th>Symbol</th>
+      <th>Holding Units</th>
+      <th>Holing Value</th>
+      <th>Target Units</th>
+      <th>Buy/Sell</th>
+    </tr>
+    {% for coin in seagull.target_coins + seagull.additional_holdings %}
+    <tr>
+      <th>{{ coin.name }}</th>
+      <th>{{ coin.symbol | upper }}</th>
+      <th>{{ coin.holding_units }}</th>
+      <th>{{ '%0.2f' | format(coin.holding_value) }} {{ seagull.config.base_currency | upper }}</th>
+      <th>{{ '%0.8f' | format(coin.target_units) }}</th>
+      <th>{{ '%0.8f' | format(coin.target_diff) }}</th>
+    </tr>
+    {% endfor %}
+  </table>
+
+  <h2>Total Investment</h2>
+  <p>{{ '%0.2f' | format(seagull.total_investment) }} {{ seagull.config.base_currency | upper }}</p>
+
+</body>
+
+</html>

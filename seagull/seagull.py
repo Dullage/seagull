@@ -1,8 +1,8 @@
 import json
 
-from coin import Coin
+from seagull_coin import SeagullCoin
 from coin_gecko import CoinGecko
-from config import SeagullConfig, SeagullConfigSchema
+from seagull_config import SeagullConfig, SeagullConfigSchema
 
 
 class Seagull:
@@ -47,20 +47,35 @@ class Seagull:
 
         coins = []
         for coin in data:
-            coins.append(Coin(coin, self.config))
+            coins.append(SeagullCoin(coin, self))
         return coins
 
+    @property
+    def target_coins(self):
+        if len(self.config.inclusions) > 0:
+            return self.config.inclusions
+        else:
+            unexcluded_coins = [
+                coin for coin in self.coin_data if coin.is_excluded is False
+            ]
+            return unexcluded_coins[0 : self.config.top_count]
 
-def calculate_percentages(market_caps):
-    total = sum([currency[1] for currency in market_caps])
-    for currency in market_caps:
-        print(currency[0], "{:.2%}".format(currency[1] / total))
+    @property
+    def additional_holdings(self):
+        """Return held coins that are not also targets."""
+        return [
+            coin
+            for coin in self.coin_data
+            if coin.holding_units > 0 and coin not in self.target_coins
+        ]
 
+    @property
+    def total_investment(self):
+        return (
+            sum([coin.holding_value for coin in self.coin_data])
+            + self.config.base_currency_to_invest
+        )
 
-if __name__ == "__main__":
-    with open("config.json", "r") as f:
-        config_json = json.load(f)
-        config = SeagullConfigSchema().load(config_json)
-
-    seagull = Seagull(config)
-    print(seagull)
+    @property
+    def target_coins_market_cap(self):
+        return sum([coin.market_cap for coin in self.target_coins])
