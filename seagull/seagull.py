@@ -13,37 +13,24 @@ class Seagull:
     def get_coin_data(self):
         """Get coin data for user. Data collected is minimised but may include
         excluded or surplus coins."""
-        # Hand Picked Selection
-        if len(self.config.inclusions) > 0:
-            coin_ids_required = (
-                self.config.inclusions + self.config.holding_coin_ids
-            )
-            data = CoinGecko.get_market_data(
+        # Get more than needed in case the top coins includes exclusions
+        data = CoinGecko.get_market_data(
+            self.config.base_currency,
+            per_page=self.config.top_count + self.config.num_exclusions,
+        )
+        # Ensure holdings are also present in the data
+        data_coin_ids = [coin["id"] for coin in data]
+        missing_coin_ids = [
+            coin_id
+            for coin_id in self.config.holding_coin_ids
+            if coin_id not in data_coin_ids
+        ]
+        if len(missing_coin_ids) > 0:
+            data += CoinGecko.get_market_data(
                 self.config.base_currency,
-                coin_ids=coin_ids_required,
-                per_page=len(coin_ids_required),
+                coin_ids=missing_coin_ids,
+                per_page=len(missing_coin_ids),
             )
-
-        # Top Coins by Market Cap Selection
-        else:
-            # Get more than needed in case the top coins includes exclusions
-            data = CoinGecko.get_market_data(
-                self.config.base_currency,
-                per_page=self.config.top_count + self.config.num_exclusions,
-            )
-            # Ensure holdings are also present in the data
-            data_coin_ids = [coin["id"] for coin in data]
-            missing_coin_ids = [
-                coin_id
-                for coin_id in self.config.holding_coin_ids
-                if coin_id not in data_coin_ids
-            ]
-            if len(missing_coin_ids) > 0:
-                data += CoinGecko.get_market_data(
-                    self.config.base_currency,
-                    coin_ids=missing_coin_ids,
-                    per_page=len(missing_coin_ids),
-                )
 
         coins = []
         for coin in data:
@@ -52,13 +39,10 @@ class Seagull:
 
     @property
     def target_coins(self):
-        if len(self.config.inclusions) > 0:
-            return self.config.inclusions
-        else:
-            unexcluded_coins = [
-                coin for coin in self.coin_data if coin.is_excluded is False
-            ]
-            return unexcluded_coins[0 : self.config.top_count]
+        unexcluded_coins = [
+            coin for coin in self.coin_data if coin.is_excluded is False
+        ]
+        return unexcluded_coins[0 : self.config.top_count]
 
     @property
     def additional_holdings(self):

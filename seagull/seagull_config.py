@@ -13,7 +13,6 @@ class SeagullConfigSchema(Schema):
         missing={},
     )
     top_count = fields.Int(missing=10)
-    inclusions = fields.List(fields.Str(), missing=[])
     exclusions = fields.List(fields.Str(), missing=[])
 
     @post_load
@@ -28,14 +27,12 @@ class SeagullConfig:
         base_currency_to_invest,
         holdings,
         top_count,
-        inclusions,
         exclusions,
     ):
         self.base_currency = base_currency
         self.base_currency_to_invest = base_currency_to_invest
         self.holdings = holdings
         self.top_count = top_count
-        self.inclusions = inclusions
         self.exclusions = exclusions
 
     @property
