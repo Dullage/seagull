@@ -1,9 +1,12 @@
-from marshmallow import fields, Schema, post_load
 from decimal import Decimal
+
+from marshmallow import Schema, fields, post_load, validate
 
 
 class SeagullConfigSchema(Schema):
-    base_currency = fields.Str(missing="usd")
+    base_currency = fields.Str(
+        validate=validate.OneOf(["usd", "gbp", "eur"]), missing="usd"
+    )
     base_currency_to_invest = fields.Decimal(
         missing=Decimal(0), as_string=True
     )
@@ -21,6 +24,8 @@ class SeagullConfigSchema(Schema):
 
 
 class SeagullConfig:
+    CURRENCY_SYMBOLS = {"usd": "$", "gbp": "£", "eur": "€"}
+
     def __init__(
         self,
         base_currency,
@@ -42,3 +47,7 @@ class SeagullConfig:
     @property
     def num_exclusions(self):
         return len(self.exclusions)
+
+    @property
+    def base_currency_symbol(self):
+        return self.CURRENCY_SYMBOLS[self.base_currency]

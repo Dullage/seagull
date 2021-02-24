@@ -1,7 +1,7 @@
 import json
 
-from seagull_coin import SeagullCoin
 from coin_gecko import CoinGecko
+from seagull_coin import SeagullCoin
 from seagull_config import SeagullConfig, SeagullConfigSchema
 
 

@@ -7,7 +7,7 @@ class SeagullCoin:
         self.id = raw_market_data["id"]
         self.symbol = raw_market_data["symbol"]
         self.name = raw_market_data["name"]
-        self.image_url = raw_market_data["image"]
+        self.image_url = raw_market_data["image"].replace("/large/", "/thumb/")
         self.current_price = Decimal(raw_market_data["current_price"])
         self.market_cap = Decimal(raw_market_data["market_cap"])
 
@@ -38,8 +38,18 @@ class SeagullCoin:
 
     @property
     def target_units(self):
-        return (self.seagull.total_investment * self.target_pct) / self.current_price
+        if self in self.seagull.target_coins:
+            return (
+                (self.seagull.total_investment * self.target_pct)
+                / self.current_price
+            ).quantize(Decimal(".00000001"))
+        else:
+            return Decimal(0)
 
     @property
-    def target_diff(self):
+    def target_units_diff(self):
         return self.target_units - self.holding_units
+
+    @property
+    def target_units_diff_value(self):
+        return self.target_units_diff * self.current_price
