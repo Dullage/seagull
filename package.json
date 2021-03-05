@@ -1,0 +1,27 @@
+{
+  "name": "seagull",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "parcel src/index.html",
+    "prod": "parcel build src/index.html"
+  },
+  "author": "Adam Dullage",
+  "license": "MIT",
+  "dependencies": {
+    "@popperjs/core": "^2.9.0",
+    "axios": "^0.21.1",
+    "bootstrap": "^5.0.0-beta2",
+    "currency.js": "^2.0.3",
+    "vue": "^2.6.12",
+    "vue-hot-reload-api": "^2.3.4"
+  },
+  "devDependencies": {
+    "@vue/component-compiler-utils": "^3.2.0",
+    "parcel-bundler": "^1.12.3",
+    "sass": "^1.32.8",
+    "vue-template-compiler": "^2.6.12"
+  }
+}
