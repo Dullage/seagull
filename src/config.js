@@ -15,10 +15,6 @@ class Config {
     this.maxTargetPct = maxTargetPct;
   }
 
-  get baseCurrencySymbol() {
-    return { USD: "$", GBP: "£", EUR: "€" }[this.baseCurrency];
-  }
-
   get holdingCoinIds() {
     return Array.from(Object.keys(this.holdings));
   }

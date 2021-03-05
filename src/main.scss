@@ -1,1 +1,13 @@
 @import "~bootstrap/scss/bootstrap.scss";
+
+tr td .target-button {
+    visibility: hidden;
+}
+
+tr:hover td .target-button {
+    visibility: visible;
+}
+
+.target-coin-row {
+    background-color: #e8f7eb;
+}

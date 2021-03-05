@@ -22,10 +22,13 @@
           id="navbarSupportedContent"
         >
           <ul class="navbar-nav">
+            <!-- Config Modal Button -->
             <button
               type="button"
               class="btn btn-primary"
-              @click="showModal"
+              data-bs-toggle="modal"
+              data-bs-target="#configModal"
+              @click="modalOpening"
             >
               Config
             </button>
@@ -38,7 +41,12 @@
     <div
       class="modal fade"
       id="configModal"
-      tabindex="1"
+      data-bs-backdrop="static"
+      data-bs-keyboard="false"
+      tabindex="-1"
+      aria-labelledby="staticBackdropLabel"
+      aria-hidden="true"
+      style="display: none"
     >
       <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
@@ -46,7 +54,7 @@
             <h5 class="modal-title" id="staticBackdropLabel">Config</h5>
           </div>
 
-          <form class="modal-body">
+          <div class="modal-body">
             <!-- Minimum Display Coins -->
             <div class="mb-3">
               <label for="showTop">Minimum Display Coins</label>
@@ -54,7 +62,7 @@
                 class="form-control"
                 type="number"
                 id="showTop"
-                v-model="draftConfig.showTop"
+                v-model="configModal.showTop"
               />
             </div>
 
@@ -64,7 +72,7 @@
               <select
                 class="form-select"
                 id="baseCurrency"
-                v-model="draftConfig.baseCurrency"
+                v-model="configModal.baseCurrency"
               >
                 <option>USD</option>
                 <option>EUR</option>
@@ -79,24 +87,31 @@
               >
               <div class="input-group">
                 <span class="input-group-text">{{
-                  draftConfig.baseCurrencySymbol
+                  currencySymbol(configModal.baseCurrency)
                 }}</span>
                 <input
                   type="number"
                   class="form-control"
-                  v-model="draftConfig.baseCurrencyToInvest"
+                  v-model="configModal.baseCurrencyToInvest"
                   id="baseCurrencyToInvest"
                 />
               </div>
             </div>
-          </form>
+          </div>
 
           <div class="modal-footer">
             <button
               type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
               class="btn btn-primary"
               data-bs-dismiss="modal"
-              @click="getCoins"
+              @click="modalSave"
             >
               Save
             </button>
@@ -107,44 +122,67 @@
 
     <!-- Main Body -->
     <div class="container pt-3">
-      <table class="table table-hover">
-        <tr>
-          <th>Rank</th>
-          <th>Name</th>
-          <th class="text-end">Market Cap</th>
-          <th>Target Pct</th>
-          <th class="text-end">Target Units</th>
-          <th class="text-end">Holding Units</th>
-          <th class="text-end">Units Diff</th>
-          <th class="text-end">Target Value</th>
-          <th class="text-end">Holding Value</th>
-          <th class="text-end">Value Diff</th>
-          <th></th>
-        </tr>
-        <tr
-          v-for="coin in coins.filter(displayCoinFilter)"
-          :class="{ 'text-muted': coin.is_target == false }"
-          :key="coin.id"
-        >
-          <th>{{ coin.marketCapRank }}</th>
-          <th :title="coin.id">
-            <img class="me-3" :src="coin.imageThumb" />{{ coin.name }} ({{
-              coin.symbol | upper
-            }})
-          </th>
-          <th class="text-end">{{ formatFiat(coin.marketCap, 0) }}</th>
-          <th>{{ coin.targetPct | pct }}</th>
-          <th class="text-end">{{ formatUnits(coin.targetUnits) }}</th>
-          <th class="text-end">{{ formatUnits(coin.holdingUnits) }}</th>
-          <th class="text-end">{{ formatUnits(coin.targetUnitsDiff) }}</th>
-          <th class="text-end">{{ formatFiat(coin.targetValue) }}</th>
-          <th class="text-end">{{ formatFiat(coin.holdingValue) }}</th>
-          <th class="text-end">{{ formatFiat(coin.targetValueDiff) }}</th>
-        </tr>
+      <h2>My Index</h2>
+      <table class="table table-hover table-borderless">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Name</th>
+            <th class="text-end">Market Cap</th>
+            <th>Target Pct</th>
+            <th class="text-end">Target Units</th>
+            <th class="text-end">Holding Units</th>
+            <th class="text-end">Units Diff</th>
+            <th class="text-end">Target Value</th>
+            <th class="text-end">Holding Value</th>
+            <th class="text-end">Value Diff</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            v-for="coin in coins.filter(displayCoinFilter)"
+            :class="{
+              'target-coin-row': coin.isTarget,
+              'text-muted': !coin.isTarget,
+            }"
+            :key="coin.id"
+          >
+            <td>{{ coin.marketCapRank }}</td>
+            <td :title="coin.id">
+              <img class="me-3" :src="coin.imageThumb" />{{ coin.name }} ({{
+                coin.symbol | upper
+              }})
+            </td>
+            <td class="text-end">{{ formatFiat(coin.marketCap, 0) }}</td>
+            <td>{{ coin.targetPct | pct }}</td>
+            <td class="text-end">{{ formatUnits(coin.targetUnits) }}</td>
+            <td class="text-end">{{ formatUnits(coin.holdingUnits) }}</td>
+            <td class="text-end">{{ formatUnits(coin.targetUnitsDiff) }}</td>
+            <td class="text-end">{{ formatFiat(coin.targetValue) }}</td>
+            <td class="text-end">{{ formatFiat(coin.holdingValue) }}</td>
+            <td class="text-end">{{ formatFiat(coin.targetValueDiff) }}</td>
+            <td>
+              <button
+                type="button"
+                class="btn btn-sm target-button"
+                :class="{
+                  'btn-success': !coin.isTarget,
+                  'btn-danger': coin.isTarget,
+                }"
+                @click="
+                  coin.isTarget = !coin.isTarget;
+                  calculateTargets();
+                "
+              >
+                {{ coin.isTarget === true ? "Remove" : "Add" }}
+              </button>
+            </td>
+          </tr>
+        </tbody>
       </table>
 
-      <!-- <h2>Total Investment</h2>
-      <p>{{ formatFiat(total_investment }}</p> -->
+      <h2>Total Investment</h2>
+      <p>{{ formatFiat(totalInvestment) }}</p>
     </div>
   </div>
 </template>
@@ -157,35 +195,76 @@ import Coin from "./coin.js";
 import Config from "./config.js";
 import currency from "currency.js";
 
+const minGetCoins = 100;
+
 export default {
   data: function () {
     return {
       config: null,
-      draftConfig: null,
+      configModal: {
+        showTop: null,
+        baseCurrency: null,
+        baseCurrencyToInvest: null,
+      },
       coins: [],
     };
   },
 
-  methods: {
-    updateDraftConfig: function () {
-      this.draftConfig = new Config(
-        this.config.showTop,
-        this.config.baseCurrency,
-        this.config.baseCurrencyToInvest,
-        this.config.holdings,
-        this.config.targetCoinIds,
-        this.config.maxTargetPct
+  computed: {
+    targetCoins: function () {
+      return this.coins.filter(function (coin) {
+        return coin.isTarget === true;
+      });
+    },
+
+    totalInvestment: function () {
+      return (
+        this.coins.map((coin) => coin.holdingValue).reduce((a, b) => a + b, 0) +
+        this.config.baseCurrencyToInvest
       );
     },
+  },
 
-    showModal: function() {
-      this.updateDraftConfig()
-      let myModal = new bootstrap.Modal(document.getElementById('configModal'))
-      myModal.toggle();
+  methods: {
+    modalOpening: function () {
+      this.configModal.showTop = this.config.showTop;
+      this.configModal.baseCurrency = this.config.baseCurrency;
+      this.configModal.baseCurrencyToInvest = this.config.baseCurrencyToInvest;
     },
 
-    saveConfigForm: function() {
-      
+    modalSave: function () {
+      let getCoinsRequired = false;
+      let recalculationRequired = false;
+      // showTop
+      if (this.config.showTop != this.configModal.showTop) {
+        console.debug("showTop Changed");
+        if (
+          this.configModal.showTop > this.config.showTop &&
+          this.configModal.showTop > minGetCoins
+        ) {
+          getCoinsRequired = true;
+        }
+        this.config.showTop = this.configModal.showTop;
+      }
+      // baseCurrency
+      if (this.config.baseCurrency != this.configModal.baseCurrency) {
+        console.debug("baseCurrency Changed");
+        this.config.baseCurrency = this.configModal.baseCurrency;
+        getCoinsRequired = true;
+      }
+      // baseCurrencyToInvest
+      if (
+        this.config.baseCurrencyToInvest !=
+        this.configModal.baseCurrencyToInvest
+      ) {
+        console.debug("baseCurrencyToInvest Changed");
+        this.config.baseCurrencyToInvest = this.configModal.baseCurrencyToInvest;
+        recalculationRequired = true;
+      }
+      // getCoins
+      if (getCoinsRequired === true) {
+        this.getCoins();
+      }
     },
 
     getCoinGeckoData: function (perPage, pageNum, coinIds = []) {
@@ -229,6 +308,7 @@ export default {
     },
 
     getCoins: function () {
+      console.debug("Getting Coin Data");
       const parent = this;
       this.getCoinGeckoData(Math.max(100, this.config.showTop), 1)
         .then(function (coinGeckoData) {
@@ -245,17 +325,41 @@ export default {
         })
         .then(function (coinGeckoData) {
           parent.coins = parent.parseCoinGeckoData(coinGeckoData);
+          parent.calculateTargets();
         });
     },
 
     checkForMissing: function (coinGeckoData) {
       const coinIds = coinGeckoData.map((coin) => coin.id);
-      const targetCoinIds = [
+      const importantCoinIds = [
         ...this.config.targetCoinIds,
         ...this.config.holdingCoinIds,
       ];
-      return targetCoinIds.filter(function (id) {
+      return importantCoinIds.filter(function (id) {
         return !coinIds.includes(id);
+      });
+    },
+
+    calculateTargets: function () {
+      const parent = this;
+      let marketCapSumRemaining = this.targetCoins
+        .map((coin) => coin.marketCap)
+        .reduce((a, b) => a + b, 0);
+      let pctRemaining = 1;
+
+      this.coins.forEach(function (coin) {
+        if (coin.isTarget) {
+          coin.targetPct = Math.min(
+            pctRemaining * (coin.marketCap / marketCapSumRemaining),
+            parent.config.maxTargetPct
+          );
+          coin.targetValue = parent.totalInvestment * coin.targetPct;
+          marketCapSumRemaining -= coin.marketCap;
+          pctRemaining -= coin.targetPct;
+        } else {
+          coin.targetPct = 0
+          coin.targetValue = 0
+        }
       });
     },
 
@@ -269,13 +373,17 @@ export default {
 
     formatFiat: function (value, precision = 2) {
       return currency(value, {
-        symbol: this.config.baseCurrencySymbol,
+        symbol: this.currencySymbol(this.config.baseCurrency),
         precision: precision,
       }).format();
     },
 
     formatUnits: function (value) {
       return Number(value).toFixed(8);
+    },
+
+    currencySymbol(isoCode) {
+      return { USD: "$", GBP: "£", EUR: "€" }[isoCode];
     },
   },
 
@@ -310,9 +418,8 @@ export default {
         "verge",
         "bitcoin-cash",
       ],
-      50
+      0.5
     );
-    this.updateDraftConfig();
     this.getCoins();
   },
 };
