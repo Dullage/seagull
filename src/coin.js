@@ -20,7 +20,6 @@ class Coin {
     this.holdingUnits = holdingUnits;
     this.isTarget = isTarget;
 
-    this.targetPct = 0;
     this.targetValue = 0;
   }
 
@@ -42,6 +41,10 @@ class Coin {
 
   get imageThumb() {
       return this.imageUrl.replace("/large/", "/thumb/")
+  }
+
+  targetValuePctOf(totalValue) {
+    return this.targetValue / totalValue
   }
 }
 

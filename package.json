@@ -23,5 +23,8 @@
     "parcel-bundler": "^1.12.3",
     "sass": "^1.32.8",
     "vue-template-compiler": "^2.6.12"
+  },
+  "alias": {
+    "vue": "./node_modules/vue/dist/vue.common.js"
   }
 }
