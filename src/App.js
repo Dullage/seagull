@@ -8,49 +8,72 @@ import currency from "currency.js";
 const minGetCoins = 100;
 
 export default {
-  data: function () {
+  data: function() {
     return {
       config: null,
       configModal: {
         showTop: null,
         baseCurrency: null,
-        baseCurrencyToInvest: null,
         maxTargetPct: null,
-        holdings: null,
+      },
+      editHoldingModal: {
+        coinId: null,
+        coinName: null,
+        coinSymbol: null,
+        holdingUnits: null,
       },
       coins: [],
-      coinList: {},
+      baseCurrencyToInvestInput: 0,
     };
   },
 
   computed: {
-    targetCoins: function () {
-      return this.coins.filter(function (coin) {
+    targetCoins: function() {
+      return this.coins.filter(function(coin) {
         return coin.isTarget === true;
       });
     },
 
-    totalInvestment: function () {
-      return (
-        this.coins.map((coin) => coin.holdingValue).reduce((a, b) => a + b, 0) +
-        this.config.baseCurrencyToInvest
-      );
+    totalHoldings: function() {
+      return this.coins
+        .map((coin) => coin.holdingValue)
+        .reduce((a, b) => a + b, 0);
+    },
+
+    totalTarget: function() {
+      return this.coins
+        .map((coin) => coin.targetValue)
+        .reduce((a, b) => a + b, 0);
+    },
+
+    totalInvestment: function() {
+      return this.totalHoldings + this.config.baseCurrencyToInvest;
+    },
+  },
+
+  watch: {
+    baseCurrencyToInvestInput: function() {
+      this.config.baseCurrencyToInvest = this.baseCurrencyToInvestInput;
+      this.calculateTargets();
     },
   },
 
   methods: {
-    modalOpening: function () {
-      this.configModal.showTop = this.config.showTop;
-      this.configModal.baseCurrency = this.config.baseCurrency;
-      this.configModal.baseCurrencyToInvest = this.config.baseCurrencyToInvest;
-      this.configModal.maxTargetPct = this.config.maxTargetPct;
-      this.configModal.holdings = [];
-      for (let [key, value] of Object.entries(this.config.holdings)) {
-        this.configModal.holdings.push({ id: key, units: value, name: "TBC" });
-      }
+    saveConfig: function() {
+      localStorage.config = JSON.stringify(this.config);
     },
 
-    modalSave: function () {
+    loadConfig: function() {
+      this.config = new Config(JSON.parse(localStorage.config));
+    },
+
+    onConfigModalOpen: function() {
+      this.configModal.showTop = this.config.showTop;
+      this.configModal.baseCurrency = this.config.baseCurrency;
+      this.configModal.maxTargetPct = this.config.maxTargetPct;
+    },
+
+    onConfigModalSave: function() {
       let getCoinsRequired = false;
       let calculateTargetsRequired = false;
       // showTop
@@ -68,14 +91,6 @@ export default {
         this.config.baseCurrency = this.configModal.baseCurrency;
         getCoinsRequired = true;
       }
-      // baseCurrencyToInvest
-      if (
-        this.config.baseCurrencyToInvest !=
-        this.configModal.baseCurrencyToInvest
-      ) {
-        this.config.baseCurrencyToInvest = this.configModal.baseCurrencyToInvest;
-        calculateTargetsRequired = true;
-      }
       // maxTargetPct
       if (this.config.maxTargetPct != this.configModal.maxTargetPct) {
         this.config.maxTargetPct = this.configModal.maxTargetPct;
@@ -89,16 +104,45 @@ export default {
       if (getCoinsRequired === false && calculateTargetsRequired === true) {
         this.calculateTargets();
       }
+      this.saveConfig();
     },
 
-    showMore: function () {
-      this.config.showTop += 5;
-      if (this.config.showTop > minGetCoins) {
+    onEditHoldingModalOpen: function(
+      coinId,
+      coinName,
+      coinSymbol,
+      holdingUnits
+    ) {
+      this.editHoldingModal.coinId = coinId;
+      this.editHoldingModal.coinName = coinName;
+      this.editHoldingModal.coinSymbol = coinSymbol;
+      this.editHoldingModal.holdingUnits = holdingUnits;
+    },
+
+    onEditHoldingModalSave: function() {
+      // Update Config
+      this.config.holdings[
+        this.editHoldingModal.coinId
+      ] = this.editHoldingModal.holdingUnits;
+      this.saveConfig();
+      // Update Coin
+      const coin = this.coins.find(
+        (coin) => coin.id === this.editHoldingModal.coinId
+      );
+      coin.holdingUnits = this.editHoldingModal.holdingUnits;
+      // Recalculate
+      this.calculateTargets();
+    },
+
+    showMoreLess: function(num) {
+      this.config.showTop = Math.max(10, this.config.showTop + num);
+      if (num > 0 && this.config.showTop > minGetCoins) {
         this.getCoins();
       }
+      this.saveConfig();
     },
 
-    getCoinGeckoData: function (perPage, pageNum, coinIds = []) {
+    getCoinGeckoData: function(perPage, pageNum, coinIds = []) {
       let requestConfig = {
         params: {
           vs_currency: this.config.baseCurrency,
@@ -116,21 +160,7 @@ export default {
       );
     },
 
-    getCoinGeckoCoinList: function () {
-      const parent = this;
-      axios
-        .get("https://api.coingecko.com/api/v3/coins/list")
-        .then(function (r) {
-          r.data.forEach(function (coin) {
-            parent.coinList[coin.id] = {
-              name: coin.name,
-              symbol: coin.symbol,
-            };
-          });
-        });
-    },
-
-    parseCoinGeckoData: function (coinGeckoData) {
+    parseCoinGeckoData: function(coinGeckoData) {
       let coins = [];
       for (let coinData of coinGeckoData) {
         let holdingUnits = this.config.holdings[coinData.id] || 0;
@@ -152,47 +182,47 @@ export default {
       return coins;
     },
 
-    getCoins: function () {
+    getCoins: function() {
       console.debug("Getting Coin Data");
       const parent = this;
       this.getCoinGeckoData(Math.max(100, this.config.showTop), 1)
-        .then(function (coinGeckoData) {
+        .then(function(coinGeckoData) {
           const missingCoinIds = parent.checkForMissing(coinGeckoData.data);
           if (missingCoinIds.length > 0) {
             return parent
               .getCoinGeckoData(missingCoinIds.length, 1, missingCoinIds)
-              .then(function (additionalCoinGeckoData) {
+              .then(function(additionalCoinGeckoData) {
                 return [...coinGeckoData.data, ...additionalCoinGeckoData.data];
               });
           } else {
             return coinGeckoData.data;
           }
         })
-        .then(function (coinGeckoData) {
+        .then(function(coinGeckoData) {
           parent.coins = parent.parseCoinGeckoData(coinGeckoData);
           parent.calculateTargets();
         });
     },
 
-    checkForMissing: function (coinGeckoData) {
+    checkForMissing: function(coinGeckoData) {
       const coinIds = coinGeckoData.map((coin) => coin.id);
       const importantCoinIds = [
         ...this.config.targetCoinIds,
         ...this.config.holdingCoinIds,
       ];
-      return importantCoinIds.filter(function (id) {
+      return importantCoinIds.filter(function(id) {
         return !coinIds.includes(id);
       });
     },
 
-    calculateTargets: function () {
+    calculateTargets: function() {
       const parent = this;
       let marketCapSumRemaining = this.targetCoins
         .map((coin) => coin.marketCap)
         .reduce((a, b) => a + b, 0);
       let investmentValueLeft = this.totalInvestment;
 
-      this.coins.forEach(function (coin) {
+      this.coins.forEach(function(coin) {
         if (coin.isTarget) {
           coin.targetValue = Math.min(
             parent.totalInvestment * parent.config.maxTargetPct,
@@ -206,7 +236,22 @@ export default {
       });
     },
 
-    displayCoinFilter: function (coin) {
+    toggleCoinTarget: function(coinId) {
+      const coin = this.coins.find((coin) => coin.id === coinId);
+      coin.isTarget = !coin.isTarget;
+      if (coin.isTarget) {
+        this.config.targetCoinIds.push(coinId);
+      } else {
+        const index = this.config.targetCoinIds.indexOf(coinId);
+        if (index > -1) {
+          this.config.targetCoinIds.splice(index, 1);
+        }
+      }
+      this.calculateTargets();
+      this.saveConfig();
+    },
+
+    displayCoinFilter: function(coin) {
       return (
         coin.isTarget == true ||
         coin.holdingUnits > 0 ||
@@ -214,56 +259,38 @@ export default {
       );
     },
 
-    formatFiat: function (value, precision = 2) {
+    formatFiat: function(value, precision = 2) {
       return currency(value, {
-        symbol: this.currencySymbol(this.config.baseCurrency),
+        symbol: this.currencySymbolFor(this.config.baseCurrency),
         precision: precision,
       }).format();
     },
 
-    formatUnits: function (value) {
+    formatUnits: function(value) {
       return Number(value).toFixed(8);
     },
 
-    currencySymbol(isoCode) {
+    currencySymbolFor(isoCode) {
       return { USD: "$", GBP: "£", EUR: "€" }[isoCode];
     },
   },
 
   filters: {
-    upper: function (value) {
-      return value.toUpperCase();
+    upper: function(value) {
+      if (value === null) {
+        return null;
+      } else {
+        return value.toUpperCase();
+      }
     },
 
-    pct: function (value) {
+    pct: function(value) {
       return `${(value * 100).toFixed(2)}%`;
     },
   },
 
-  created: function () {
-    this.config = new Config(
-      15,
-      "GBP",
-      500,
-      {
-        bitcoin: "0.05",
-        ethereum: "1",
-        ripple: "20",
-        xsushi: "1",
-        "gatechain-token": "0.45",
-      },
-      [
-        "bitcoin",
-        "ethereum",
-        "tether",
-        "ripple",
-        "dash",
-        "verge",
-        "bitcoin-cash",
-      ],
-      0.5
-    );
+  created: function() {
+    this.loadConfig();
     this.getCoins();
-    this.getCoinGeckoCoinList();
   },
 };

@@ -44,7 +44,7 @@ class Coin {
   }
 
   targetValuePctOf(totalValue) {
-    return this.targetValue / totalValue
+    return this.targetValue / totalValue || 0
   }
 }
 

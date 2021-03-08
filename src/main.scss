@@ -1,13 +1,14 @@
-@import "~bootstrap/scss/bootstrap.scss";
+@import "../node_modules/bootstrap/scss/bootstrap.scss";
+@import "../node_modules/bootstrap-icons/font/bootstrap-icons.css";
 
-tr td .target-button {
+tr td .btn {
     visibility: hidden;
 }
 
-tr:hover td .target-button {
+tr:hover td .btn {
     visibility: visible;
 }
 
-.target-coin-row {
-    background-color: #e8f7eb;
-}
+// .target-coin-row {
+//     background-color: #e8f7eb;
+// }

@@ -29,7 +29,7 @@
               class="btn btn-primary"
               data-bs-toggle="modal"
               data-bs-target="#configModal"
-              @click="modalOpening"
+              @click="onConfigModalOpen"
             >
               Config
             </button>
@@ -45,16 +45,15 @@
       data-bs-backdrop="static"
       data-bs-keyboard="false"
       tabindex="-1"
-      aria-labelledby="staticBackdropLabel"
-      aria-hidden="true"
-      style="display: none"
     >
-      <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
+          <!-- Modal Header -->
           <div class="modal-header">
-            <h5 class="modal-title" id="staticBackdropLabel">Config</h5>
+            <h5 class="modal-title">Config</h5>
           </div>
 
+          <!-- Modal Body -->
           <div class="modal-body">
             <!-- Minimum Display Coins -->
             <div class="mb-3">
@@ -82,24 +81,6 @@
               </select>
             </div>
 
-            <!-- Investment -->
-            <div class="mb-3">
-              <label for="baseCurrencyToInvest" class="form-label"
-                >Investment</label
-              >
-              <div class="input-group">
-                <span class="input-group-text">{{
-                  currencySymbol(configModal.baseCurrency)
-                }}</span>
-                <input
-                  type="number"
-                  class="form-control"
-                  v-model.number="configModal.baseCurrencyToInvest"
-                  id="baseCurrencyToInvest"
-                />
-              </div>
-            </div>
-
             <!-- Maximum Target Percentage -->
             <div class="mb-3">
               <label for="maxTargetPct" class="form-label"
@@ -118,39 +99,10 @@
                 v-model.number="configModal.maxTargetPct"
               />
               <div class="form-text">Some instructional text...</div>
-
-              <!-- Holdings -->
-              <div class="mb-3">
-                <div
-                  class="row mb-3"
-                  v-for="coin in configModal.holdings"
-                  :key="coin.id"
-                >
-                  <label class="col-sm-2 col-form-label">{{
-                    coinList[coin.id].name
-                  }}</label>
-                  <div class="col-sm-10">
-                    <input
-                      type="number"
-                      class="form-control"
-                      v-model.number="coin.units"
-                    />
-                  </div>
-                </div>
-                <select class="form-select">
-                  <option selected></option>
-                  <option
-                    v-for="(value, key) in coinList"
-                    :value="value.id"
-                    :key="value.id"
-                  >
-                    {{ value.name }}
-                  </option>
-                </select>
-              </div>
             </div>
           </div>
 
+          <!-- Modal Footer -->
           <div class="modal-footer">
             <button
               type="button"
@@ -163,7 +115,59 @@
               type="button"
               class="btn btn-primary"
               data-bs-dismiss="modal"
-              @click="modalSave"
+              @click="onConfigModalSave"
+            >
+              Save
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit Holding Modal -->
+    <div
+      class="modal fade"
+      id="editHoldingModal"
+      data-bs-backdrop="static"
+      data-bs-keyboard="false"
+      tabindex="-1"
+    >
+      <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+          <!-- Modal Body -->
+          <div class="modal-body">
+            <div class="mb-3">
+              <label for="holdingUnits" class="form-label"
+                >{{ editHoldingModal.coinName }} Holdings</label
+              >
+              <div class="input-group">
+                <span class="input-group-text">{{
+                  editHoldingModal.coinSymbol | upper
+                }}</span>
+                <input
+                  type="number"
+                  class="form-control"
+                  v-model.number="editHoldingModal.holdingUnits"
+                  id="holdingUnits"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Modal Footer -->
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              class="btn btn-primary"
+              data-bs-dismiss="modal"
+              @click="onEditHoldingModalSave"
             >
               Save
             </button>
@@ -174,10 +178,33 @@
 
     <!-- Main Body -->
     <div class="container pt-3">
-      <h2>Total Investment</h2>
-      <p>{{ formatFiat(totalInvestment) }}</p>
+      <form>
+        <label for="baseCurrencyToInvest" class="form-label"
+          >New Investment</label
+        >
+        <div class="input-group">
+          <!-- <span class="input-group-text">{{
+            currencySymbolFor(config.baseCurrency)
+          }}</span> -->
+          <select
+            class="input-group-text"
+            id="baseCurrency"
+            v-model="config.baseCurrency"
+          >
+            <option>USD</option>
+            <option>EUR</option>
+            <option>GBP</option>
+          </select>
+          <input
+            type="number"
+            class="form-control"
+            v-model.number.lazy="baseCurrencyToInvestInput"
+            id="baseCurrencyToInvest"
+          />
+        </div>
+      </form>
 
-      <h2>My Index</h2>
+      <!-- Table -->
       <table class="table table-hover table-borderless">
         <thead>
           <tr>
@@ -199,6 +226,7 @@
             :class="{
               'target-coin-row': coin.isTarget,
               'text-muted': !coin.isTarget,
+              'fw-bold': coin.isTarget,
             }"
             :key="coin.id"
           >
@@ -217,32 +245,76 @@
             <td class="text-end">{{ formatFiat(coin.holdingValue) }}</td>
             <td class="text-end">{{ formatFiat(coin.targetValueDiff) }}</td>
             <td>
+              <!-- Include / Exclude Button -->
               <button
                 type="button"
-                class="btn btn-sm target-button"
+                :title="coin.isTarget ? 'Exclude' : 'Include'"
+                class="btn btn-sm"
                 :class="{
                   'btn-success': !coin.isTarget,
                   'btn-danger': coin.isTarget,
                 }"
+                @click="toggleCoinTarget(coin.id)"
+              >
+                <i v-show="!coin.isTarget" class="bi bi-plus-circle"></i>
+                <i v-show="coin.isTarget" class="bi bi-dash-circle"></i>
+              </button>
+
+              <!-- Edit Holding Modal Button -->
+              <button
+                type="button"
+                title="Edit Holding"
+                class="btn btn-sm btn-secondary"
+                data-bs-toggle="modal"
+                data-bs-target="#editHoldingModal"
                 @click="
-                  coin.isTarget = !coin.isTarget;
-                  calculateTargets();
+                  onEditHoldingModalOpen(
+                    coin.id,
+                    coin.name,
+                    coin.symbol,
+                    coin.holdingUnits
+                  )
                 "
               >
-                {{ coin.isTarget === true ? "Remove" : "Add" }}
+                <i class="bi bi-pencil"></i>
               </button>
             </td>
           </tr>
         </tbody>
+        <!-- Totals -->
+        <tfoot>
+          <tr>
+            <td colspan="7"></td>
+            <td class="text-end">
+              <strong>{{ formatFiat(totalInvestment) }}</strong>
+            </td>
+            <td class="text-end">
+              <strong>{{ formatFiat(totalHoldings) }}</strong>
+            </td>
+            <td class="text-end">
+              <strong>{{ formatFiat(config.baseCurrencyToInvest) }}</strong>
+            </td>
+          </tr>
+        </tfoot>
       </table>
     </div>
-    <div class="container text-center">
+
+    <!-- Show More / Less Buttons -->
+    <div class="container text-center mb-5">
       <button
         type="button"
-        class="btn btn-outline-secondary btn-sm mx-auto mb-4"
-        @click="showMore"
+        class="btn btn-outline-primary btn-sm mx-auto me-2"
+        @click="showMoreLess(5)"
       >
         Show More
+      </button>
+      <button
+        type="button"
+        class="btn btn-outline-secondary btn-sm mx-auto"
+        @click="showMoreLess(-5)"
+        :disabled="config.showTop <= 10"
+      >
+        Show Less
       </button>
     </div>
   </div>
