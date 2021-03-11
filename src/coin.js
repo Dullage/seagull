@@ -7,8 +7,8 @@ class Coin {
     currentPrice,
     marketCap,
     marketCapRank,
-    holdingUnits,
-    isTarget
+    holdingUnits = 0,
+    isTarget = false
   ) {
     this.id = id;
     this.symbol = symbol;
