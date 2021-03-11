@@ -1,14 +1,18 @@
 @import "../node_modules/bootstrap/scss/bootstrap.scss";
 @import "../node_modules/bootstrap-icons/font/bootstrap-icons.css";
 
-tr td .btn {
+@media (hover: hover) {
+  tr td .btn {
     visibility: hidden;
+  }
 }
 
 tr:hover td .btn {
-    visibility: visible;
+  visibility: visible;
 }
 
-// .target-coin-row {
-//     background-color: #e8f7eb;
-// }
+@media (hover: none) {
+    .include-exclude-btn {
+        display: none;
+    }
+}

@@ -1,39 +1,27 @@
 <template>
   <div>
     <!-- Nav Bar -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <nav class="navbar navbar-light bg-light">
       <div class="container">
-        <a class="navbar-brand" href="/">Seagull</a>
-        <small class="text-muted">A DIY cryptocurrency index builder</small>
-
-        <button
-          class="navbar-toggler"
-          type="button"
-          data-bs-toggle="collapse"
-          data-bs-target="#navbarSupportedContent"
-          aria-controls="navbarSupportedContent"
-          aria-expanded="false"
-          aria-label="Toggle navigation"
-        >
-          <span class="navbar-toggler-icon"></span>
-        </button>
-
-        <div
-          class="collapse navbar-collapse d-flex justify-content-end"
-          id="navbarSupportedContent"
-        >
-          <ul class="navbar-nav">
-            <!-- Config Modal Button -->
-            <button
-              type="button"
-              class="btn btn-primary"
-              data-bs-toggle="modal"
-              data-bs-target="#configModal"
-              @click="onConfigModalOpen"
-            >
-              <i class="bi bi-gear me-1"></i> Configuration
-            </button>
-          </ul>
+        <div>
+          <a class="navbar-brand" href="/">Seagull</a>
+          <small class="text-muted d-block"
+            >A DIY cryptocurrency index builder</small
+          >
+        </div>
+        <div class="d-flex justify-content-between">
+          <!-- <ul class="navbar-nav"> -->
+          <!-- Config Modal Button -->
+          <button
+            type="button"
+            class="btn btn-primary"
+            data-bs-toggle="modal"
+            data-bs-target="#configModal"
+            @click="onConfigModalOpen"
+          >
+            <i class="bi bi-gear me-1"></i> Configuration
+          </button>
+          <!-- </ul> -->
         </div>
       </div>
     </nav>
@@ -182,73 +170,126 @@
       <!-- Main Body -->
       <div class="container pt-4">
         <div class="container text-center mb-4">
-            <label for="baseCurrencyToInvest" class="form-label fw-bold">
-              Fiat Investment
-            </label>
-            <div class="input-group">
-              <select
-                class="input-group-text"
-                id="baseCurrency"
-                v-model="config.baseCurrency"
-              >
-                <option>USD</option>
-                <option>EUR</option>
-                <option>GBP</option>
-              </select>
-              <input
-                type="number"
-                class="form-control"
-                v-model.number.lazy="config.baseCurrencyToInvest"
-                id="baseCurrencyToInvest"
-              />
+          <label for="baseCurrencyToInvest" class="form-label fw-bold">
+            Fiat Investment
+          </label>
+          <div class="input-group">
+            <select
+              class="input-group-text"
+              id="baseCurrency"
+              v-model="config.baseCurrency"
+            >
+              <option>USD</option>
+              <option>EUR</option>
+              <option>GBP</option>
+            </select>
+            <input
+              type="number"
+              class="form-control"
+              v-model.number.lazy="config.baseCurrencyToInvest"
+              id="baseCurrencyToInvest"
+            />
           </div>
         </div>
 
         <!-- Table -->
         <table class="table table-hover table-borderless">
+          <!-- Headers -->
           <thead>
             <tr>
-              <th>#</th>
-              <th>Name</th>
-              <th class="text-end">Market Cap</th>
+              <!-- Rank -->
+              <th class="d-none d-xxl-table-cell">#</th>
+              <!-- Coin -->
+              <th>Coin</th>
+              <!-- Market Cap -->
+              <th class="d-none d-lg-table-cell text-end">Market Cap</th>
+              <!-- Target Pct -->
               <th>Target Pct</th>
+              <!-- Target Units -->
               <th class="text-end">Target Units</th>
+              <!-- Holidng Units -->
               <th v-if="totalHoldings > 0" class="text-end">Holding Units</th>
-              <th v-if="totalHoldings > 0" class="text-end">Units Diff</th>
-              <th class="text-end">Target Value</th>
+              <!-- Units Diff -->
+              <th
+                v-if="totalHoldings > 0"
+                class="d-none d-xxl-table-cell text-end"
+              >
+                Units Diff
+              </th>
+              <!-- Target Value -->
+              <th class="d-none d-xxl-table-cell text-end">Target Value</th>
+              <!-- Holding Value -->
               <th v-if="totalHoldings > 0" class="text-end">Holding Value</th>
-              <th v-if="totalHoldings > 0" class="text-end">Value Diff</th>
+              <!-- Value Diff -->
+              <th
+                v-if="totalHoldings > 0"
+                class="d-none d-xxl-table-cell text-end"
+              >
+                Value Diff
+              </th>
             </tr>
           </thead>
+          <!-- Body -->
           <tbody>
             <tr
               v-for="coin in coins.filter(displayCoinFilter)"
               :class="{ 'text-muted': !coin.isTarget }"
               :key="coin.id"
             >
-              <td>{{ coin.marketCapRank }}</td>
+              <!-- Rank -->
+              <td class="d-none d-xxl-table-cell">{{ coin.marketCapRank }}</td>
+              <!-- Coin -->
               <td :title="coin.id" :class="{ 'fw-bold': coin.isTarget }">
-                <img class="me-3" :src="coin.imageThumb" />{{ coin.name }} ({{
-                  coin.symbol | upper
-                }})
+                <img
+                  class="d-none d-md-inline me-3"
+                  :src="coin.imageThumb"
+                /><span class="d-none d-xxl-inline"
+                  >{{ coin.name }} ({{ coin.symbol | upper }})</span
+                ><span class="d-xxl-none">{{ coin.symbol | upper }}</span>
               </td>
-              <td class="text-end">{{ formatFiat(coin.marketCap, 0) }}</td>
+              <!-- Market Cap -->
+              <td class="d-none d-lg-table-cell text-end">
+                {{ formatFiat(coin.marketCap, 0) }}
+              </td>
+              <!-- Target Pct -->
               <td>{{ coin.targetValuePctOf(totalInvestment) | pct }}</td>
+              <!-- Target Units -->
               <td class="text-end">{{ formatUnits(coin.targetUnits) }}</td>
-              <td v-if="totalHoldings > 0" class="text-end">{{ formatUnits(coin.holdingUnits) }}</td>
-              <td v-if="totalHoldings > 0" class="text-end">{{ formatUnits(coin.targetUnitsDiff) }}</td>
-              <td class="text-end">{{ formatFiat(coin.targetValue) }}</td>
-              <td v-if="totalHoldings > 0" class="text-end">{{ formatFiat(coin.holdingValue) }}</td>
-              <td v-if="totalHoldings > 0" class="text-end">{{ formatFiat(coin.targetValueDiff) }}</td>
+              <!-- Holidng Units -->
+              <td v-if="totalHoldings > 0" class="text-end">
+                {{ formatUnits(coin.holdingUnits) }}
+              </td>
+              <!-- Units Diff -->
+              <td
+                v-if="totalHoldings > 0"
+                class="d-none d-xxl-table-cell text-end"
+              >
+                {{ formatUnits(coin.targetUnitsDiff) }}
+              </td>
+              <!-- Target Value -->
+              <td class="d-none d-xxl-table-cell text-end">
+                {{ formatFiat(coin.targetValue) }}
+              </td>
+              <!-- Holding Value -->
+              <td v-if="totalHoldings > 0" class="text-end">
+                {{ formatFiat(coin.holdingValue) }}
+              </td>
+              <!-- Value Diff -->
+              <td
+                v-if="totalHoldings > 0"
+                class="d-none d-xxl-table-cell text-end"
+              >
+                {{ formatFiat(coin.targetValueDiff) }}
+              </td>
               <td>
                 <!-- Include / Exclude Button -->
                 <button
                   type="button"
                   :title="coin.isTarget ? 'Exclude' : 'Include'"
-                  class="btn btn-sm"
+                  class="btn btn-sm include-exclude-btn"
                   :class="{
-                    'btn-success': !coin.isTarget,
-                    'btn-danger': coin.isTarget,
+                    'btn-outline-success': !coin.isTarget,
+                    'btn-outline-danger': coin.isTarget,
                   }"
                   @click="toggleCoinTarget(coin.id)"
                 >
@@ -260,7 +301,7 @@
                 <button
                   type="button"
                   title="Edit Holding"
-                  class="btn btn-sm btn-secondary"
+                  class="btn btn-sm btn-outline-secondary"
                   data-bs-toggle="modal"
                   data-bs-target="#editHoldingModal"
                   @click="
@@ -280,14 +321,30 @@
           <!-- Totals -->
           <tfoot v-if="totalHoldings > 0">
             <tr>
-              <td colspan="7"></td>
-              <td class="text-end">
+              <!-- Rank -->
+              <td class="d-none d-xxl-table-cell"></td>
+              <!-- Coin -->
+              <td></td>
+              <!-- Market Cap -->
+              <td class="d-none d-xxl-table-cell"></td>
+              <!-- Target Pct -->
+              <td></td>
+              <!-- Target Units -->
+              <td></td>
+              <!-- Holidng Units -->
+              <td></td>
+              <!-- Units Diff -->
+              <td class="d-none d-xxl-table-cell"></td>
+              <!-- Target Value -->
+              <td class="d-none d-xxl-table-cell text-end">
                 <strong>{{ formatFiat(totalInvestment) }}</strong>
               </td>
+              <!-- Holding Value -->
               <td class="text-end">
                 <strong>{{ formatFiat(totalHoldings) }}</strong>
               </td>
-              <td class="text-end">
+              <!-- Value Diff -->
+              <td class="d-none d-xxl-table-cell text-end">
                 <strong>{{ formatFiat(-config.baseCurrencyToInvest) }}</strong>
               </td>
             </tr>
@@ -305,6 +362,20 @@
           Show More
         </button>
       </div>
+    </div>
+
+    <div class="text-center text-muted fw-light mb-4">
+      <a
+        class="text-decoration-none text-reset"
+        href="https://www.coingecko.com"
+        >Powered by CoinGecko API</a
+      >
+      <span class="mx-3">|</span>
+      <a
+        class="text-decoration-none text-reset"
+        href="https://github.com/Dullage/seagull"
+        >View on <i class="bi bi-github"></i> GitHub
+      </a>
     </div>
   </div>
 </template>
