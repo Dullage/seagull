@@ -11,6 +11,7 @@ const configLocalStorageKey = "config";
 export default {
   data: function() {
     return {
+      loading: true,
       config: null,
       configCache: null,
       setDefaultTargetCoins: false,
@@ -237,7 +238,7 @@ export default {
     },
 
     getCoins: function() {
-      console.debug("Getting Coin Data");
+      this.loading = true;
       const parent = this;
       this.getCoinGeckoData(Math.max(100, this.config.showTop), 1)
         .then(function(coinGeckoData) {
@@ -288,6 +289,7 @@ export default {
           coin.targetValue = 0;
         }
       });
+      this.loading = false;
     },
 
     toggleCoinTarget: function(coinId) {

@@ -26,7 +26,9 @@
       </div>
     </nav>
 
-    <div v-if="config != null">
+    <div v-if="loading" class="loader"></div>
+
+    <div v-else>
       <!-- Config Modal -->
       <div
         class="modal fade"
@@ -108,7 +110,9 @@
                   step="0.01"
                   v-model.number="configModal.maxTargetPct"
                 />
-                <div class="form-text">The maximum target percentage a single coin can be allocated.</div>
+                <div class="form-text">
+                  The maximum target percentage a single coin can be allocated.
+                </div>
               </div>
             </div>
 
@@ -227,7 +231,7 @@
 
         <!-- Table -->
         <table
-          class="table table-hover table-borderless"
+          class="table table-hover table-borderless text-nowrap"
           :class="{ small: totalHoldings > 0 }"
         >
           <!-- Headers -->
@@ -235,8 +239,8 @@
             <tr>
               <!-- Rank -->
               <th class="d-none d-xxl-table-cell">#</th>
-              <!-- Coin -->
-              <th>Coin</th>
+              <!-- Icon + Coin -->
+              <th colspan="2">Coin</th>
               <!-- Market Cap -->
               <th class="d-none d-lg-table-cell text-end">Market Cap</th>
               <!-- Target Pct -->
@@ -274,12 +278,10 @@
             >
               <!-- Rank -->
               <td class="d-none d-xxl-table-cell">{{ coin.marketCapRank }}</td>
-              <!-- Coin -->
+              <!-- Icon + Coin-->
+              <img class="me-x" :src="coin.imageThumb" />
               <td :title="coin.id" :class="{ 'fw-bold': coin.isTarget }">
-                <img
-                  class="d-none d-md-inline me-3"
-                  :src="coin.imageThumb"
-                /><span class="d-none d-md-inline"
+                <span class="d-none d-md-inline"
                   >{{ coin.name }} ({{ coin.symbol | upper }})</span
                 ><span class="d-md-none">{{ coin.symbol | upper }}</span>
               </td>
@@ -352,8 +354,8 @@
             <tr>
               <!-- Rank -->
               <td class="d-none d-xxl-table-cell"></td>
-              <!-- Coin -->
-              <td></td>
+              <!-- Icon + Coin -->
+              <td colspan="2"></td>
               <!-- Market Cap -->
               <td class="d-none d-xxl-table-cell"></td>
               <!-- Target Pct -->
@@ -394,7 +396,7 @@
     </div>
 
     <!-- Footer -->
-    <div class="small text-center text-muted fw-light mb-4">
+    <div v-if="!loading" class="small text-center text-muted fw-light mb-4">
       <a
         class="text-decoration-none text-reset"
         href="https://www.coingecko.com"
