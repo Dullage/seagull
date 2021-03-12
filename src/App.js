@@ -6,32 +6,33 @@ import Config from "./config.js";
 import currency from "currency.js";
 
 const minGetCoins = 100;
+const configLocalStorageKey = "config";
 
 export default {
   data: function() {
     return {
       config: null,
+      configCache: null,
+      setDefaultTargetCoins: false,
+      rememberMe: false,
       configModal: {
+        rememberMe: null,
         showTop: null,
         baseCurrency: null,
         maxTargetPct: null,
       },
-      editHoldingModal: {
+      editCoinModal: {
         coinId: null,
         coinName: null,
         coinSymbol: null,
         holdingUnits: null,
+        isTarget: null,
       },
       coins: [],
     };
   },
 
   computed: {
-    configCache: function() {
-      // See https://github.com/vuejs/vue/issues/2164#issuecomment-542766308
-      return JSON.stringify(this.config);
-    },
-
     targetCoins: function() {
       return this.coins.filter(function(coin) {
         return coin.isTarget === true;
@@ -56,101 +57,131 @@ export default {
   },
 
   watch: {
-    configCache: {
-      deep: true,
-      handler: function(after, before) {
-        console.debug("Config Updated");
-        this.saveConfig();
-        before = JSON.parse(before);
-        after = JSON.parse(after);
-        let getCoinsRequired = false;
-        let updateCoinsRequired = false;
-        let calculateTargetsRequired = false;
-        if (before === null) {
-          getCoinsRequired = true;
-        }
-        // showTop
-        else if (
-          after.showTop > before.showTop &&
-          after.showTop > minGetCoins
-        ) {
-          getCoinsRequired = true;
-        }
-        // baseCurrency
-        else if (before.baseCurrency != after.baseCurrency) {
-          getCoinsRequired = true;
-        }
-        // holdings
-        else if (before.holdings != after.holdings) {
-          updateCoinsRequired = true;
-        }
-        // targetCoinIds
-        else if (before.targetCoinIds != after.targetCoinIds) {
-          updateCoinsRequired = true;
-        }
-        // maxTargetPct
-        else if (before.maxTargetPct != after.maxTargetPct) {
-          calculateTargetsRequired = true;
-        }
-        // baseCurrencyToInvest
-        else if (before.baseCurrencyToInvest != after.baseCurrencyToInvest) {
-          calculateTargetsRequired = true;
-        }
-        // Actions
-        if (getCoinsRequired) {
-          this.getCoins();
-        } else if (updateCoinsRequired) {
-          this.updateCoins();
-        } else if (calculateTargetsRequired) {
-          this.calculateTargets();
-        }
-      },
+    rememberMe: function(newValue) {
+      if (newValue === true) {
+        this.persistConfig();
+      } else {
+        this.deletePersistedConfig();
+      }
     },
   },
 
   methods: {
-    saveConfig: function() {
-      localStorage.config = JSON.stringify(this.config);
+    persistConfig: function() {
+      localStorage[configLocalStorageKey] = JSON.stringify(this.config);
     },
 
-    loadConfig: function() {
-      this.config = new Config(JSON.parse(localStorage.config));
-      this.baseCurrencyInput = this.config.baseCurrency;
-      this.baseCurrencyToInvestInput = this.config.baseCurrencyToInvest;
+    deletePersistedConfig: function() {
+      localStorage.removeItem(configLocalStorageKey);
+    },
+
+    loadPersistedConfig: function() {
+      let config = localStorage[configLocalStorageKey];
+      if (typeof config !== "undefined") {
+        this.rememberMe = true;
+        this.config = new Config(JSON.parse(config));
+      } else {
+        this.setDefaultTargetCoins = true;
+        this.config = new Config();
+      }
+      this.configUpdated();
+    },
+
+    configUpdated: function() {
+      if (this.rememberMe === true) {
+        this.persistConfig();
+      }
+      let getCoinsRequired = false;
+      let updateCoinsRequired = false;
+      let calculateTargetsRequired = false;
+      if (this.configCache === null) {
+        getCoinsRequired = true;
+      }
+      // showTop
+      else if (
+        this.config.showTop > this.configCache.showTop &&
+        this.config.showTop > minGetCoins
+      ) {
+        getCoinsRequired = true;
+      }
+      // baseCurrency
+      else if (this.configCache.baseCurrency != this.config.baseCurrency) {
+        getCoinsRequired = true;
+      }
+      // holdings
+      else if (this.configCache.holdings != this.config.holdings) {
+        updateCoinsRequired = true;
+      }
+      // targetCoinIds
+      else if (this.configCache.targetCoinIds != this.config.targetCoinIds) {
+        updateCoinsRequired = true;
+      }
+      // maxTargetPct
+      else if (this.configCache.maxTargetPct != this.config.maxTargetPct) {
+        calculateTargetsRequired = true;
+      }
+      // baseCurrencyToInvest
+      else if (
+        this.configCache.baseCurrencyToInvest !=
+        this.config.baseCurrencyToInvest
+      ) {
+        calculateTargetsRequired = true;
+      }
+      // Actions
+      this.configCache = JSON.parse(JSON.stringify(this.config));
+      if (getCoinsRequired) {
+        this.getCoins();
+      } else if (updateCoinsRequired) {
+        this.updateCoins();
+      } else if (calculateTargetsRequired) {
+        this.calculateTargets();
+      }
     },
 
     onConfigModalOpen: function() {
+      this.configModal.rememberMe = this.rememberMe;
       this.configModal.showTop = this.config.showTop;
       this.configModal.baseCurrency = this.config.baseCurrency;
       this.configModal.maxTargetPct = this.config.maxTargetPct;
     },
 
     onConfigModalSave: function() {
+      this.rememberMe = this.configModal.rememberMe;
       this.config.showTop = this.configModal.showTop;
       this.config.baseCurrency = this.configModal.baseCurrency;
       this.config.maxTargetPct = this.configModal.maxTargetPct;
+      this.configUpdated();
     },
 
-    onEditHoldingModalOpen: function(
-      coinId,
-      coinName,
-      coinSymbol,
-      holdingUnits
-    ) {
-      this.editHoldingModal.coinId = coinId;
-      this.editHoldingModal.coinName = coinName;
-      this.editHoldingModal.coinSymbol = coinSymbol;
-      this.editHoldingModal.holdingUnits = holdingUnits;
+    oneditCoinModalOpen: function(coin) {
+      this.editCoinModal.coinId = coin.id;
+      this.editCoinModal.coinName = coin.name;
+      this.editCoinModal.coinSymbol = coin.symbol;
+      this.editCoinModal.holdingUnits = coin.holdingUnits;
+      this.editCoinModal.isTarget = coin.isTarget;
     },
 
-    onEditHoldingModalSave: function() {
+    oneditCoinModalSave: function() {
       this.config.holdings[
-        this.editHoldingModal.coinId
-      ] = this.editHoldingModal.holdingUnits;
+        this.editCoinModal.coinId
+      ] = this.editCoinModal.holdingUnits;
+      let targetCoinIdIndex = this.config.targetCoinIds.indexOf(
+        this.editCoinModal.coinId
+      );
+      if (this.editCoinModal.isTarget === false && targetCoinIdIndex > -1) {
+        this.config.targetCoinIds.splice(targetCoinIdIndex, 1);
+      } else if (
+        this.editCoinModal.isTarget === true &&
+        targetCoinIdIndex === -1
+      ) {
+        this.config.targetCoinIds.push(this.editCoinModal.coinId);
+      }
+      this.configUpdated();
     },
 
     showMoreLess: function(num) {
       this.config.showTop = Math.max(10, this.config.showTop + num);
+      this.configUpdated();
     },
 
     getCoinGeckoData: function(perPage, pageNum, coinIds = []) {
@@ -190,6 +221,14 @@ export default {
     },
 
     updateCoins: function() {
+      if (this.setDefaultTargetCoins === true) {
+        parent = this;
+        // Set the top 10 coins as targets
+        this.coins.slice(0, 10).forEach(function(coin) {
+          parent.config.targetCoinIds.push(coin.id);
+        });
+        this.setDefaultTargetCoins = false;
+      }
       for (let coin of this.coins) {
         coin.holdingUnits = this.config.holdings[coin.id] || 0;
         coin.isTarget = this.config.targetCoinIds.includes(coin.id);
@@ -258,6 +297,7 @@ export default {
       } else {
         this.config.targetCoinIds.splice(index, 1);
       }
+      this.configUpdated();
     },
 
     displayCoinFilter: function(coin) {
@@ -311,7 +351,6 @@ export default {
   },
 
   created: function() {
-    this.loadConfig();
-    // this.getCoins();
+    this.loadPersistedConfig();
   },
 };

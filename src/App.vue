@@ -6,22 +6,22 @@
         <div>
           <a class="navbar-brand" href="/">Seagull</a>
           <small class="text-muted d-block"
-            >A DIY cryptocurrency index builder</small
+            >A DIY cryptocurrency index calculator</small
           >
         </div>
         <div class="d-flex justify-content-between">
-          <!-- <ul class="navbar-nav"> -->
-          <!-- Config Modal Button -->
-          <button
-            type="button"
-            class="btn btn-primary"
-            data-bs-toggle="modal"
-            data-bs-target="#configModal"
-            @click="onConfigModalOpen"
-          >
-            <i class="bi bi-gear me-1"></i> Configuration
-          </button>
-          <!-- </ul> -->
+          <ul class="navbar-nav">
+            <!-- Config Modal Button -->
+            <button
+              type="button"
+              class="btn btn-primary"
+              data-bs-toggle="modal"
+              data-bs-target="#configModal"
+              @click="onConfigModalOpen"
+            >
+              <i class="bi bi-gear me-1"></i> Configuration
+            </button>
+          </ul>
         </div>
       </div>
     </nav>
@@ -44,8 +44,24 @@
 
             <!-- Modal Body -->
             <div class="modal-body">
+              <!-- Remember Me -->
+              <div class="form-check form-switch mb-4">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  id="rememberMe"
+                  v-model="configModal.rememberMe"
+                />
+                <label class="form-check-label" for="rememberMe"
+                  >Remember Me</label
+                >
+                <div class="form-text">
+                  Store all configuration in this browser's storage.
+                </div>
+              </div>
+
               <!-- Minimum Display Coins -->
-              <div class="mb-3">
+              <div class="mb-4">
                 <label for="showTop">Minimum Display Coins</label>
                 <input
                   class="form-control"
@@ -53,11 +69,14 @@
                   id="showTop"
                   v-model.number="configModal.showTop"
                 />
-                <div class="form-text">Some instructional text...</div>
+                <div class="form-text">
+                  The minumum amount of coins to show. Note: Coins you are
+                  holding and coins in your index will always be shown.
+                </div>
               </div>
 
               <!-- Base Currency -->
-              <div class="mb-3">
+              <div class="mb-4">
                 <label for="baseCurrency" class="form-label"
                   >Base Currency</label
                 >
@@ -73,7 +92,7 @@
               </div>
 
               <!-- Maximum Target Percentage -->
-              <div class="mb-3">
+              <div>
                 <label for="maxTargetPct" class="form-label"
                   >Maximum Target Percentage:
                   <strong
@@ -89,7 +108,7 @@
                   step="0.01"
                   v-model.number="configModal.maxTargetPct"
                 />
-                <div class="form-text">Some instructional text...</div>
+                <div class="form-text">The maximum target percentage a single coin can be allocated.</div>
               </div>
             </div>
 
@@ -115,10 +134,10 @@
         </div>
       </div>
 
-      <!-- Edit Holding Modal -->
+      <!-- Edit Coin Modal -->
       <div
         class="modal fade"
-        id="editHoldingModal"
+        id="editCoinModal"
         data-bs-backdrop="static"
         data-bs-keyboard="false"
         tabindex="-1"
@@ -127,21 +146,32 @@
           <div class="modal-content">
             <!-- Modal Body -->
             <div class="modal-body">
+              <!-- Holding Units -->
               <div class="mb-3">
-                <label for="holdingUnits" class="form-label"
-                  >{{ editHoldingModal.coinName }} Holdings</label
-                >
+                <label for="holdingUnits" class="form-label">Holdings</label>
                 <div class="input-group">
                   <span class="input-group-text">{{
-                    editHoldingModal.coinSymbol | upper
+                    editCoinModal.coinSymbol | upper
                   }}</span>
                   <input
                     type="number"
                     class="form-control"
-                    v-model.number="editHoldingModal.holdingUnits"
+                    v-model.number="editCoinModal.holdingUnits"
                     id="holdingUnits"
                   />
                 </div>
+              </div>
+              <!-- isTarget -->
+              <div class="form-check form-switch mb-3">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  id="isTarget"
+                  v-model="editCoinModal.isTarget"
+                />
+                <label class="form-check-label" for="isTarget"
+                  >Include in Index</label
+                >
               </div>
             </div>
 
@@ -158,7 +188,7 @@
                 type="button"
                 class="btn btn-primary"
                 data-bs-dismiss="modal"
-                @click="onEditHoldingModalSave"
+                @click="oneditCoinModalSave"
               >
                 Save
               </button>
@@ -169,6 +199,7 @@
 
       <!-- Main Body -->
       <div class="container pt-4">
+        <!-- Fiat Investment -->
         <div class="container text-center mb-4">
           <label for="baseCurrencyToInvest" class="form-label fw-bold">
             Fiat Investment
@@ -178,6 +209,7 @@
               class="input-group-text"
               id="baseCurrency"
               v-model="config.baseCurrency"
+              @change="configUpdated"
             >
               <option>USD</option>
               <option>EUR</option>
@@ -187,13 +219,17 @@
               type="number"
               class="form-control"
               v-model.number.lazy="config.baseCurrencyToInvest"
+              @change="configUpdated"
               id="baseCurrencyToInvest"
             />
           </div>
         </div>
 
         <!-- Table -->
-        <table class="table table-hover table-borderless">
+        <table
+          class="table table-hover table-borderless"
+          :class="{ small: totalHoldings > 0 }"
+        >
           <!-- Headers -->
           <thead>
             <tr>
@@ -243,9 +279,9 @@
                 <img
                   class="d-none d-md-inline me-3"
                   :src="coin.imageThumb"
-                /><span class="d-none d-xxl-inline"
+                /><span class="d-none d-md-inline"
                   >{{ coin.name }} ({{ coin.symbol | upper }})</span
-                ><span class="d-xxl-none">{{ coin.symbol | upper }}</span>
+                ><span class="d-md-none">{{ coin.symbol | upper }}</span>
               </td>
               <!-- Market Cap -->
               <td class="d-none d-lg-table-cell text-end">
@@ -288,8 +324,8 @@
                   :title="coin.isTarget ? 'Exclude' : 'Include'"
                   class="btn btn-sm include-exclude-btn"
                   :class="{
-                    'btn-outline-success': !coin.isTarget,
-                    'btn-outline-danger': coin.isTarget,
+                    'btn-success': !coin.isTarget,
+                    'btn-danger': coin.isTarget,
                   }"
                   @click="toggleCoinTarget(coin.id)"
                 >
@@ -301,17 +337,10 @@
                 <button
                   type="button"
                   title="Edit Holding"
-                  class="btn btn-sm btn-outline-secondary"
+                  class="btn btn-sm btn-secondary"
                   data-bs-toggle="modal"
-                  data-bs-target="#editHoldingModal"
-                  @click="
-                    onEditHoldingModalOpen(
-                      coin.id,
-                      coin.name,
-                      coin.symbol,
-                      coin.holdingUnits
-                    )
-                  "
+                  data-bs-target="#editCoinModal"
+                  @click="oneditCoinModalOpen(coin)"
                 >
                   <i class="bi bi-pencil"></i>
                 </button>
@@ -364,7 +393,8 @@
       </div>
     </div>
 
-    <div class="text-center text-muted fw-light mb-4">
+    <!-- Footer -->
+    <div class="small text-center text-muted fw-light mb-4">
       <a
         class="text-decoration-none text-reset"
         href="https://www.coingecko.com"
