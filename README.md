@@ -1,6 +1,6 @@
 ![Logo](/src/favicon/apple-touch-icon.png)
 
-# seagull
+# Seagull
 
 A DIY cryptocurrency index calculator.
 

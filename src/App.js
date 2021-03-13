@@ -46,12 +46,6 @@ export default {
         .reduce((a, b) => a + b, 0);
     },
 
-    totalTarget: function() {
-      return this.coins
-        .map((coin) => coin.targetValue)
-        .reduce((a, b) => a + b, 0);
-    },
-
     totalInvestment: function() {
       return this.totalHoldings + this.config.baseCurrencyToInvest;
     },
@@ -154,7 +148,7 @@ export default {
       this.configUpdated();
     },
 
-    oneditCoinModalOpen: function(coin) {
+    onEditCoinModalOpen: function(coin) {
       this.editCoinModal.coinId = coin.id;
       this.editCoinModal.coinName = coin.name;
       this.editCoinModal.coinSymbol = coin.symbol;
@@ -162,7 +156,7 @@ export default {
       this.editCoinModal.isTarget = coin.isTarget;
     },
 
-    oneditCoinModalSave: function() {
+    onEditCoinModalSave: function() {
       this.config.holdings[
         this.editCoinModal.coinId
       ] = this.editCoinModal.holdingUnits;

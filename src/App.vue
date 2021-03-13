@@ -3,18 +3,24 @@
     <!-- Nav Bar -->
     <nav class="navbar navbar-light bg-light">
       <div class="container">
-        <div class="d-flex align-items-center">
-          <img src="wsnaccad-origami-bird.svg" id="logo" alt="Origami Bird" class="me-3" />
+        <!-- Brand -->
+        <a class="d-flex align-items-center text-decoration-none" href="/">
+          <img
+            src="wsnaccad-origami-bird.svg"
+            id="logo"
+            alt="Origami Bird"
+            class="me-3"
+          />
           <div>
-            <a class="navbar-brand" href="/">Seagull</a>
+            <span class="navbar-brand">Seagull</span>
             <small class="text-muted d-block"
               >A DIY cryptocurrency index calculator</small
             >
           </div>
-        </div>
+        </a>
+        <!-- Config Modal Button -->
         <div class="d-flex justify-content-between">
           <ul class="navbar-nav">
-            <!-- Config Modal Button -->
             <button
               type="button"
               class="btn btn-primary"
@@ -154,6 +160,7 @@
           <div class="modal-content">
             <!-- Modal Body -->
             <div class="modal-body">
+
               <!-- Holding Units -->
               <div class="mb-3">
                 <label for="holdingUnits" class="form-label">Holdings</label>
@@ -169,6 +176,7 @@
                   />
                 </div>
               </div>
+
               <!-- isTarget -->
               <div class="form-check form-switch mb-3">
                 <input
@@ -196,7 +204,7 @@
                 type="button"
                 class="btn btn-primary"
                 data-bs-dismiss="modal"
-                @click="oneditCoinModalSave"
+                @click="onEditCoinModalSave"
               >
                 Save
               </button>
@@ -283,6 +291,7 @@
               </th>
             </tr>
           </thead>
+
           <!-- Body -->
           <tbody>
             <tr
@@ -362,13 +371,14 @@
                   class="btn btn-sm btn-outline-secondary d-none d-sm-table-cell"
                   data-bs-toggle="modal"
                   data-bs-target="#editCoinModal"
-                  @click="oneditCoinModalOpen(coin)"
+                  @click="onEditCoinModalOpen(coin)"
                 >
                   <i class="bi bi-pencil-fill"></i>
                 </button>
               </td>
             </tr>
           </tbody>
+          
           <!-- Totals -->
           <tfoot v-if="totalHoldings > 0">
             <tr>
