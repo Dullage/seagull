@@ -2,6 +2,10 @@
 @import "../node_modules/bootstrap-icons/font/bootstrap-icons.css";
 @import "./loader.scss";
 
+#logo {
+  height: 3rem;
+}
+
 @media (hover: hover) {
   tr td .btn {
     visibility: hidden;
@@ -10,10 +14,4 @@
 
 tr:hover td .btn {
   visibility: visible;
-}
-
-@media (hover: none) {
-    .include-exclude-btn {
-        display: none;
-    }
 }

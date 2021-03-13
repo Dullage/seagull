@@ -3,11 +3,14 @@
     <!-- Nav Bar -->
     <nav class="navbar navbar-light bg-light">
       <div class="container">
-        <div>
-          <a class="navbar-brand" href="/">Seagull</a>
-          <small class="text-muted d-block"
-            >A DIY cryptocurrency index calculator</small
-          >
+        <div class="d-flex align-items-center">
+          <img src="wsnaccad-origami-bird.svg" id="logo" alt="Origami Bird" class="me-3" />
+          <div>
+            <a class="navbar-brand" href="/">Seagull</a>
+            <small class="text-muted d-block"
+              >A DIY cryptocurrency index calculator</small
+            >
+          </div>
         </div>
         <div class="d-flex justify-content-between">
           <ul class="navbar-nav">
@@ -19,7 +22,8 @@
               data-bs-target="#configModal"
               @click="onConfigModalOpen"
             >
-              <i class="bi bi-gear me-1"></i> Configuration
+              <i class="bi bi-gear"></i
+              ><span class="d-none d-sm-inline ms-2">Configuration</span>
             </button>
           </ul>
         </div>
@@ -58,7 +62,7 @@
                   >Remember Me</label
                 >
                 <div class="form-text">
-                  Store all configuration in this browser's storage.
+                  Store all configuration on this device.
                 </div>
               </div>
 
@@ -231,7 +235,7 @@
 
         <!-- Table -->
         <table
-          class="table table-hover table-borderless text-nowrap"
+          class="table table-hover table-borderless"
           :class="{ small: totalHoldings > 0 }"
         >
           <!-- Headers -->
@@ -248,7 +252,12 @@
               <!-- Target Units -->
               <th class="text-end">Target Units</th>
               <!-- Holidng Units -->
-              <th v-if="totalHoldings > 0" class="text-end">Holding Units</th>
+              <th
+                v-if="totalHoldings > 0"
+                class="d-none d-md-table-cell text-end"
+              >
+                Holding Units
+              </th>
               <!-- Units Diff -->
               <th
                 v-if="totalHoldings > 0"
@@ -259,7 +268,12 @@
               <!-- Target Value -->
               <th class="d-none d-xxl-table-cell text-end">Target Value</th>
               <!-- Holding Value -->
-              <th v-if="totalHoldings > 0" class="text-end">Holding Value</th>
+              <th
+                v-if="totalHoldings > 0"
+                class="d-none d-sm-table-cell text-end"
+              >
+                Holding Value
+              </th>
               <!-- Value Diff -->
               <th
                 v-if="totalHoldings > 0"
@@ -279,7 +293,7 @@
               <!-- Rank -->
               <td class="d-none d-xxl-table-cell">{{ coin.marketCapRank }}</td>
               <!-- Icon + Coin-->
-              <img class="me-x" :src="coin.imageThumb" />
+              <td><img class="me-x" :src="coin.imageThumb" /></td>
               <td :title="coin.id" :class="{ 'fw-bold': coin.isTarget }">
                 <span class="d-none d-md-inline"
                   >{{ coin.name }} ({{ coin.symbol | upper }})</span
@@ -294,7 +308,10 @@
               <!-- Target Units -->
               <td class="text-end">{{ formatUnits(coin.targetUnits) }}</td>
               <!-- Holidng Units -->
-              <td v-if="totalHoldings > 0" class="text-end">
+              <td
+                v-if="totalHoldings > 0"
+                class="d-none d-md-table-cell text-end"
+              >
                 {{ formatUnits(coin.holdingUnits) }}
               </td>
               <!-- Units Diff -->
@@ -309,7 +326,10 @@
                 {{ formatFiat(coin.targetValue) }}
               </td>
               <!-- Holding Value -->
-              <td v-if="totalHoldings > 0" class="text-end">
+              <td
+                v-if="totalHoldings > 0"
+                class="d-none d-sm-table-cell text-end"
+              >
                 {{ formatFiat(coin.holdingValue) }}
               </td>
               <!-- Value Diff -->
@@ -324,27 +344,27 @@
                 <button
                   type="button"
                   :title="coin.isTarget ? 'Exclude' : 'Include'"
-                  class="btn btn-sm include-exclude-btn"
+                  class="btn btn-sm"
                   :class="{
-                    'btn-success': !coin.isTarget,
-                    'btn-danger': coin.isTarget,
+                    'btn-outline-success': !coin.isTarget,
+                    'btn-outline-danger': coin.isTarget,
                   }"
                   @click="toggleCoinTarget(coin.id)"
                 >
-                  <i v-show="!coin.isTarget" class="bi bi-plus-circle"></i>
-                  <i v-show="coin.isTarget" class="bi bi-dash-circle"></i>
+                  <i v-show="!coin.isTarget" class="bi bi-plus-circle-fill"></i>
+                  <i v-show="coin.isTarget" class="bi bi-dash-circle-fill"></i>
                 </button>
 
                 <!-- Edit Holding Modal Button -->
                 <button
                   type="button"
                   title="Edit Holding"
-                  class="btn btn-sm btn-secondary"
+                  class="btn btn-sm btn-outline-secondary d-none d-sm-table-cell"
                   data-bs-toggle="modal"
                   data-bs-target="#editCoinModal"
                   @click="oneditCoinModalOpen(coin)"
                 >
-                  <i class="bi bi-pencil"></i>
+                  <i class="bi bi-pencil-fill"></i>
                 </button>
               </td>
             </tr>
@@ -357,13 +377,13 @@
               <!-- Icon + Coin -->
               <td colspan="2"></td>
               <!-- Market Cap -->
-              <td class="d-none d-xxl-table-cell"></td>
+              <td class="d-none d-lg-table-cell"></td>
               <!-- Target Pct -->
               <td></td>
               <!-- Target Units -->
               <td></td>
               <!-- Holidng Units -->
-              <td></td>
+              <td class="d-none d-md-table-cell"></td>
               <!-- Units Diff -->
               <td class="d-none d-xxl-table-cell"></td>
               <!-- Target Value -->
@@ -371,7 +391,7 @@
                 <strong>{{ formatFiat(totalInvestment) }}</strong>
               </td>
               <!-- Holding Value -->
-              <td class="text-end">
+              <td class="d-none d-sm-table-cell text-end">
                 <strong>{{ formatFiat(totalHoldings) }}</strong>
               </td>
               <!-- Value Diff -->
@@ -381,33 +401,41 @@
             </tr>
           </tfoot>
         </table>
-      </div>
 
-      <!-- Show More Button -->
-      <div class="container text-center mb-5">
-        <button
-          type="button"
-          class="btn btn-outline-primary btn-sm mx-auto"
-          @click="showMoreLess(5)"
-        >
-          Show More
-        </button>
-      </div>
-    </div>
+        <!-- Show More Button -->
+        <div class="text-center mb-4">
+          <button
+            type="button"
+            class="btn btn-outline-primary btn-sm mx-auto"
+            @click="showMoreLess(5)"
+          >
+            Show More
+          </button>
+        </div>
 
-    <!-- Footer -->
-    <div v-if="!loading" class="small text-center text-muted fw-light mb-4">
-      <a
-        class="text-decoration-none text-reset"
-        href="https://www.coingecko.com"
-        >Powered by CoinGecko API</a
-      >
-      <span class="mx-3">|</span>
-      <a
-        class="text-decoration-none text-reset"
-        href="https://github.com/Dullage/seagull"
-        >View on <i class="bi bi-github"></i> GitHub
-      </a>
+        <!-- Tip -->
+        <div class="d-sm-none text-center text-muted mb-4">
+          <i class="bi bi-lightbulb me-1"></i
+          ><small
+            >Tip: Switch to a large screen to view and manage holdings.</small
+          >
+        </div>
+
+        <!-- Footer -->
+        <div class="small text-center text-muted fw-light my-3">
+          <a
+            class="text-decoration-none text-reset"
+            href="https://www.coingecko.com"
+            >Powered by CoinGecko API</a
+          >
+          <span class="mx-3">|</span>
+          <a
+            class="text-decoration-none text-reset"
+            href="https://github.com/Dullage/seagull"
+            >View on <i class="bi bi-github"></i> GitHub
+          </a>
+        </div>
+      </div>
     </div>
   </div>
 </template>
