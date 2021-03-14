@@ -427,7 +427,7 @@
         <div class="d-sm-none text-center text-muted mb-4">
           <i class="bi bi-lightbulb me-1"></i
           ><small
-            >Tip: Switch to a large screen to view and manage holdings.</small
+            >Tip: Switch to a larger screen to view and manage holdings.</small
           >
         </div>
 
