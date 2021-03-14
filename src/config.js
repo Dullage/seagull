@@ -1,11 +1,12 @@
 class Config {
   constructor(config = {}) {
-    this.showTop = config.showTop || 12;
-    this.baseCurrency = config.baseCurrency || "GBP";
-    this.baseCurrencyToInvest = config.baseCurrencyToInvest || 1000;
-    this.holdings = config.holdings || {};
-    this.targetCoinIds = config.targetCoinIds || [];
-    this.maxTargetPct = config.maxTargetPct || 1;
+    this.showTop = "showTop" in config ? config.showTop : 12;
+    this.baseCurrency = "baseCurrency" in config ? config.baseCurrency : "GBP";
+    this.baseCurrencyToInvest =
+      "baseCurrencyToInvest" in config ? config.baseCurrencyToInvest : 1000;
+    this.holdings = "holdings" in config ? config.holdings : {};
+    this.targetCoinIds = "targetCoinIds" in config ? config.targetCoinIds : [];
+    this.maxTargetPct = "maxTargetPct" in config ? config.maxTargetPct : 1;
   }
 
   get holdingCoinIds() {
