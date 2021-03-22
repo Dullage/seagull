@@ -89,7 +89,7 @@ export default {
         history.replaceState({}, document.title, "/");
       }
       // Next try the local storage
-      else if (typeof config !== "undefined") {
+      else if (typeof localStorageConfig !== "undefined") {
         this.rememberMe = true;
         this.config = new Config(JSON.parse(localStorageConfig));
       }
