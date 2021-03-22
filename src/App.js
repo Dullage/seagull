@@ -16,6 +16,7 @@ export default {
       configCache: null,
       setDefaultTargetCoins: false,
       rememberMe: false,
+      sharableUrl: null,
       configModal: {
         rememberMe: null,
         showTop: null,
@@ -70,22 +71,45 @@ export default {
       localStorage.removeItem(configLocalStorageKey);
     },
 
-    loadPersistedConfig: function() {
-      let config = localStorage[configLocalStorageKey];
-      if (typeof config !== "undefined") {
+    encodeConfig: function() {
+      return btoa(JSON.stringify(this.config));
+    },
+
+    decodeConfig: function(base64Config) {
+      return JSON.parse(atob(base64Config));
+    },
+
+    loadConfig: function() {
+      let URLParams = new URLSearchParams(window.location.search);
+      let URLParamsConfig = URLParams.get("config");
+      let localStorageConfig = localStorage[configLocalStorageKey];
+      // Look in URL params first
+      if (URLParamsConfig !== null) {
+        this.config = new Config(this.decodeConfig(URLParamsConfig));
+        history.replaceState({}, document.title, "/");
+      }
+      // Next try the local storage
+      else if (typeof config !== "undefined") {
         this.rememberMe = true;
-        this.config = new Config(JSON.parse(config));
-      } else {
+        this.config = new Config(JSON.parse(localStorageConfig));
+      }
+      // Else resort to defaults
+      else {
         this.setDefaultTargetCoins = true;
         this.config = new Config();
       }
       this.configUpdated();
     },
 
+    updateSharableUrl: function() {
+      this.sharableUrl = `${window.location.origin}?config=${this.encodeConfig()}`;
+    },
+
     configUpdated: function() {
       if (this.rememberMe === true) {
         this.persistConfig();
       }
+      this.updateSharableUrl();
       let getCoinsRequired = false;
       let updateCoinsRequired = false;
       let calculateTargetsRequired = false;
@@ -347,6 +371,6 @@ export default {
   },
 
   created: function() {
-    this.loadPersistedConfig();
+    this.loadConfig();
   },
 };

@@ -4,7 +4,7 @@
     <nav class="navbar navbar-light bg-light">
       <div class="container">
         <!-- Brand -->
-        <a class="d-flex align-items-center text-decoration-none" href="/">
+        <a class="d-flex align-items-center text-decoration-none" :href="sharableUrl">
           <img
             src="wsnaccad-origami-bird.svg"
             id="logo"
@@ -160,7 +160,7 @@
           <div class="modal-content">
             <!-- Modal Body -->
             <div class="modal-body">
-
+              
               <!-- Holding Units -->
               <div class="mb-3">
                 <label for="holdingUnits" class="form-label">Holdings</label>
@@ -378,7 +378,7 @@
               </td>
             </tr>
           </tbody>
-          
+
           <!-- Totals -->
           <tfoot v-if="totalHoldings > 0">
             <tr>
